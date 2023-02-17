@@ -6,18 +6,45 @@ import { baseUrl } from "../../commonApi/todoApi";
 const JoinForm = () => {
   const navigator = useNavigate();
 
+  //멤버
+  // const [user, setUser] = useState();
+  // const [input, setInput] = useState();
+
   const [member, setMember] = useState({
     username: "",
     password: "",
     passwordConfirm: "",
-    email: "",
     nickName: "",
     birth: "",
     gender: "",
     authRole: "ROLE_MEMBER",
   });
 
+  //오류메세지
+  const [message, setMessage] = useState({
+    username: "",
+    password: "",
+    passwordConfirm: "",
+    nickName: "",
+    birth: "",
+    gender: "",
+    authRole: "ROLE_MEMBER",
+  });
+
+  //유효성
+  const [effect, setEffect] = useState({
+    username: false,
+    password: false,
+    passwordConfirm: false,
+    nickName: false,
+    birth: false,
+    gender: false,
+    authRole: "ROLE_MEMBER",
+  });
+
   const onSubmit = async (e) => {
+    if (!userValidator()) return;
+
     e.preventDefault();
     await axios
       .post(`${baseUrl}/join`, member, {
@@ -27,11 +54,31 @@ const JoinForm = () => {
         setMember({
           username: "",
           password: "",
-          passwordConfirm: "",
-          email: "",
           nickName: "",
           birth: "",
           gender: "",
+          authRole: "ROLE_MEMBER",
+        });
+      })
+      .then((response) => {
+        setMessage({
+          username: "",
+          password: "",
+          passwordConfirm: "",
+          nickName: "",
+          birth: "",
+          gender: "",
+          authRole: "ROLE_MEMBER",
+        });
+      })
+      .then((response) => {
+        setEffect({
+          username: false,
+          password: false,
+          passwordConfirm: false,
+          nickName: false,
+          birth: false,
+          gender: false,
           authRole: "ROLE_MEMBER",
         });
       })
@@ -43,13 +90,44 @@ const JoinForm = () => {
       });
   };
 
+  const onChangeName = (e) => {
+    const currentUsername = e.target.value;
+    setMessage({ username: currentUsername });
+    const idRegExp = /^[0-9a-zA-Z]+$/;
+    if (idRegExp.test(e.target.value)) {
+      setMember({ ...member, username: e.target.value });
+      setMessage({ ...message, username: e.target.value });
+      console.log(e.target.value);
+      setEffect({ username: false });
+    } else {
+      setMessage({ ...message, username: "사용가능한 아이디" });
+      setEffect({ ...effect, username: true });
+      // setInput({ ...member.username, username: e.target.value });
+    }
+  };
+  const userValidator = () => {
+    let valid = true;
+    if (member.password !== member.passwordConfirm) {
+      valid = false;
+      alert("비밀번호가 일치하지 않습니다.");
+    }
+    return valid;
+  };
+
+  const userChangeNick = (e) => {
+    const currentNickName = e.target.value;
+    setMessage({ nickName: currentNickName });
+    const nickRegExp = /^(?=.*[a-z0-9가-힣])[a-z0-9가-힣]{2,7}$/;
+  };
+
   const handleValueChange = (e) => {
     // radio 버튼에서는 preventDefault()를 하면 더블클릭을 해줘야 한다.
     // e.preventDefault();
     setMember({ ...member, [e.target.name]: e.target.value });
-    var p1 = document.getElementById("password").value;
-    var p2 = document.getElementById("passwordConfirm").value;
-    if (p1 == "" || )
+
+    if (e.target.name === member.passwordConfirm) {
+      userValidator();
+    }
   };
 
   return (
@@ -63,9 +141,11 @@ const JoinForm = () => {
               type="text"
               className="form-control"
               name="username"
-              placeholder="영문과 숫자를 조합하여 4~12자 안으로 입력."
-              onChange={handleValueChange}
+              placeholder="???"
+              value={member.username}
+              onChange={onChangeName}
             />
+            <span></span>
           </div>
           <div className="form-group mb-1">
             <span>비밀번호</span>
@@ -87,16 +167,8 @@ const JoinForm = () => {
               onChange={handleValueChange}
             />
           </div>
-          <div className="form-group mb-1">
-            <span>이메일</span>
-            <input
-              type="email"
-              className="form-control"
-              name="email"
-              placeholder="Email"
-              onChange={handleValueChange}
-            />
-          </div>
+          <span></span>
+
           <div className="form-group mb-1">
             <span>닉네임</span>
             <input
