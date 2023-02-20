@@ -5,46 +5,54 @@ import { baseUrl } from "../../commonApi/todoApi";
 
 const JoinForm = () => {
   const navigator = useNavigate();
-
-  //멤버
-  // const [user, setUser] = useState();
-  // const [input, setInput] = useState();
-
+  // useState로쓸필요없다 화면에 표시되는게 아니어서..
+  // 오류창 띄울때 리렌더링이 필요한데 useRef는 리렌더링이 안되서 useState로 바꿔봤습니다!
   const [member, setMember] = useState({
     username: "",
     password: "",
     passwordConfirm: "",
-    nickName: "",
+    nickname: "",
     birth: "",
     gender: "",
     authRole: "ROLE_MEMBER",
   });
 
   //오류메세지
-  const [message, setMessage] = useState({
-    username: "",
-    password: "",
-    passwordConfirm: "",
-    nickName: "",
-    birth: "",
-    gender: "",
+  const message = {
+    username: "영문과 숫자를 조합하여 4~12자 안으로 입력해주세요😥",
+    password: "영어, 숫자, 특수문자를 조합하여 8~12자 안으로 입력해주세요😥",
+    passwordConfirm: "비밀번호가 일치하지 않습니다😥",
+    nickname: "영어,한글,숫자 상관없이 2~7자 안으로 입력해주세요😥",
     authRole: "ROLE_MEMBER",
-  });
+  };
 
   //유효성
   const [effect, setEffect] = useState({
     username: false,
     password: false,
     passwordConfirm: false,
-    nickName: false,
-    birth: false,
-    gender: false,
-    authRole: "ROLE_MEMBER",
+    nickname: false,
   });
 
-  const onSubmit = async (e) => {
-    if (!userValidator()) return;
+  //출생년도 option을 위한 for문
+  const birthYear = () => {
+    const result = [];
+    for (let i = 1900; i <= 2023; i++) {
+      result.push(
+        <option value={i} key={i}>
+          {i}
+        </option>
+      );
+    }
+    return result;
+  };
 
+  const onSubmit = async (e) => {
+    const result = userValidChk("submit");
+    if (!result.valid) {
+      const msg = message[result.where];
+      alert(msg);
+    }
     e.preventDefault();
     await axios
       .post(`${baseUrl}/join`, member, {
@@ -54,34 +62,13 @@ const JoinForm = () => {
         setMember({
           username: "",
           password: "",
-          nickName: "",
+          nickname: "",
           birth: "",
           gender: "",
           authRole: "ROLE_MEMBER",
         });
       })
-      .then((response) => {
-        setMessage({
-          username: "",
-          password: "",
-          passwordConfirm: "",
-          nickName: "",
-          birth: "",
-          gender: "",
-          authRole: "ROLE_MEMBER",
-        });
-      })
-      .then((response) => {
-        setEffect({
-          username: false,
-          password: false,
-          passwordConfirm: false,
-          nickName: false,
-          birth: false,
-          gender: false,
-          authRole: "ROLE_MEMBER",
-        });
-      })
+
       .then((response) => {
         navigator("/");
       })
@@ -90,43 +77,83 @@ const JoinForm = () => {
       });
   };
 
-  const onChangeName = (e) => {
-    const currentUsername = e.target.value;
-    setMessage({ username: currentUsername });
-    const idRegExp = /^[0-9a-zA-Z]+$/;
-    if (idRegExp.test(e.target.value)) {
-      setMember({ ...member, username: e.target.value });
-      setMessage({ ...message, username: e.target.value });
-      console.log(e.target.value);
-      setEffect({ username: false });
-    } else {
-      setMessage({ ...message, username: "사용가능한 아이디" });
-      setEffect({ ...effect, username: true });
-      // setInput({ ...member.username, username: e.target.value });
+  //정규식
+  const userValidChk = (target) => {
+    // console.log(target);
+    // console.log("valid check");
+    // check user name
+    if (target !== "submit" && target === "username") {
+      const idRegExp = /^(?=.*[a-z])(?=.*\d)[a-z0-9]{4,12}$/;
+      console.log(member.username);
+      // console.log(member.username.length);
+      if (!idRegExp.test(member.username)) {
+        setEffect({ ...effect, username: false });
+        return { valid: false, where: "username" };
+      } else {
+        setEffect({ ...effect, username: true });
+        console.log(effect);
+      }
     }
-  };
-  const userValidator = () => {
-    let valid = true;
-    if (member.password !== member.passwordConfirm) {
-      valid = false;
-      alert("비밀번호가 일치하지 않습니다.");
-    }
-    return valid;
-  };
 
-  const userChangeNick = (e) => {
-    const currentNickName = e.target.value;
-    setMessage({ nickName: currentNickName });
-    const nickRegExp = /^(?=.*[a-z0-9가-힣])[a-z0-9가-힣]{2,7}$/;
+    // check password
+    if (target !== "submit" && target === "password") {
+      const pwRegExp =
+        /^(?=.*[a-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,12}$/;
+      if (!pwRegExp.test(member.password)) {
+        setEffect({ ...effect, password: false });
+        return { valid: false, where: "password" };
+      } else {
+        setEffect({ ...effect, password: true });
+      }
+    }
+
+    // check passwordConfirm
+    if (target !== "submit" && target === "passwordConfirm") {
+      // console.log(member.password);
+      // console.log(member.passwordConfirm);
+      // console.log(member.password !== member.passwordConfirm);
+      if (member.password !== member.passwordConfirm) {
+        setEffect({ ...effect, passwordConfirm: false });
+        return { valid: false, where: "passwordConfirm" };
+      } else {
+        setEffect({ ...effect, passwordConfirm: true });
+      }
+    }
+
+    // check nickname
+    if (target !== "submit" && target === "nickname") {
+      const nicknameRegExp = /^(?=.*[a-z0-9가-힣])[a-z0-9가-힣]{2,7}$/;
+      if (!nicknameRegExp.test(member.nickname)) {
+        setEffect({ ...effect, nickname: false });
+        return { valid: false, where: "nickname" };
+      } else {
+        setEffect({ ...effect, nickname: true });
+      }
+    }
+
+    return true;
   };
 
   const handleValueChange = (e) => {
-    // radio 버튼에서는 preventDefault()를 하면 더블클릭을 해줘야 한다.
-    // e.preventDefault();
-    setMember({ ...member, [e.target.name]: e.target.value });
+    member[e.target.name] = e.target.value;
 
-    if (e.target.name === member.passwordConfirm) {
-      userValidator();
+    userValidChk(e.target.name);
+  };
+
+  // 중복체크 하는곳인데 아직 잘 모름.... return -> username, nickname 쪽에 넣어줘야함
+  const memberDupChk = async (type) => {
+    const chkName = member[type];
+    const result = await axios.post(
+      `${baseUrl}/dupChk`,
+      { chkName, type },
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    if (result.data > 0) {
+      // 중복
+    } else {
+      // 통과
     }
   };
 
@@ -136,19 +163,42 @@ const JoinForm = () => {
         <div className="container">
           <h1>회원가입</h1>
           <div className="form-group mb-1">
-            <span>아이디</span>
-            <input
-              type="text"
-              className="form-control"
-              name="username"
-              placeholder="???"
-              value={member.username}
-              onChange={onChangeName}
-            />
-            <span></span>
+            <span style={{ fontWeight: "bold" }}>아이디</span>
+            <div className="flex">
+              <input
+                type="text"
+                className="form-control"
+                name="username"
+                placeholder="영문과 숫자를 조합하여 4~12자 안으로 입력"
+                onChange={handleValueChange}
+              />
+              <button
+                onClick={memberDupChk("username")}
+                className="btn btn-secondary"
+              >
+                중복확인
+              </button>
+            </div>
+            {/* 유효성체크 */}
+            {/* {effect.username ? (
+              <span id='idMsg' style={{ color: "green" }}>
+                사용가능한 아이디입니다😄
+              </span>
+            ) : (
+              <span id='idMsg' style={{ color: "red" }}>
+                {message.username}
+              </span>
+            )} */}
+
+            {/* 오류창 안뜨다가 잘못입력하면 나오는게 더 깔끔할까 싶어 고쳐봤습니다..! */}
+            {!effect.username && member.username.length > 0 && (
+              <span id="idMsg" style={{ color: "red" }}>
+                {message.username}
+              </span>
+            )}
           </div>
           <div className="form-group mb-1">
-            <span>비밀번호</span>
+            <span style={{ fontWeight: "bold" }}>비밀번호</span>
             <input
               type="password"
               className="form-control"
@@ -156,9 +206,24 @@ const JoinForm = () => {
               placeholder="영어, 숫자, 특수문자를 조합하여 8~12자 안으로 입력"
               onChange={handleValueChange}
             />
+            {}
+            {/* {effect.password ? (
+              <span id='idMsg' style={{ color: "green" }}>
+                사용가능한 비밀번호입니다😄
+              </span>
+            ) : (
+              <span id='idMsg' style={{ color: "red" }}>
+                {message.password}
+              </span>
+            )} */}
+            {!effect.password && member.password.length > 0 && (
+              <span id="idMsg" style={{ color: "red" }}>
+                {message.password}
+              </span>
+            )}
           </div>
           <div className="form-group mb-1">
-            <span>비밀번호 확인</span>
+            <span style={{ fontWeight: "bold" }}>비밀번호 확인</span>
             <input
               type="password"
               className="form-control"
@@ -166,44 +231,98 @@ const JoinForm = () => {
               placeholder="비밀번호 확인"
               onChange={handleValueChange}
             />
+            {effect.passwordConfirm ? (
+              <span id="idMsg" style={{ color: "green" }}>
+                비밀번호가 일치합니다😄
+              </span>
+            ) : (
+              <span id="idMsg" style={{ color: "red" }}>
+                {/* {message.passwordConfirm} */}
+              </span>
+            )}
+
+            {!effect.passwordConfirm && member.passwordConfirm.length > 0 && (
+              <span id="idMsg" style={{ color: "red" }}>
+                {message.passwordConfirm}
+              </span>
+            )}
           </div>
           <span></span>
-
           <div className="form-group mb-1">
-            <span>닉네임</span>
-            <input
-              type="nickName"
-              className="form-control"
-              name="nickName"
-              placeholder="영어,한글,숫자 상관없이 2~7자 안으로 입력"
-              onChange={handleValueChange}
-            />
+            <span style={{ fontWeight: "bold" }}>닉네임</span>
+            <div className="flex">
+              <input
+                type="nickname"
+                className="form-control"
+                name="nickname"
+                placeholder="영어,한글,숫자 상관없이 2~7자 안으로 입력"
+                onChange={handleValueChange}
+              />
+              <button
+                onClick={memberDupChk("nickname")}
+                className="btn btn-secondary"
+              >
+                중복확인
+              </button>
+            </div>
+            {/* {effect.nickname ? (
+              <span id='idMsg' style={{ color: "green" }}>
+                사용가능한 닉네임입니다😄
+              </span>
+            ) : (
+              <span id='idMsg' style={{ color: "red" }}>
+                {message.nickname}
+              </span>
+            )} */}
+
+            {!effect.nickname && member.nickname.length > 0 && (
+              <span id="idMsg" style={{ color: "red" }}>
+                {message.nickname}
+              </span>
+            )}
           </div>
           <div className="form-group mb-1">
-            <span>출생년도</span>
-            <input
-              type="birth"
+            <div style={{ fontWeight: "bold" }}>출생년도</div>
+            <select
               className="form-control"
               name="birth"
-              placeholder="출생년도 4자리 입력 "
               onChange={handleValueChange}
-            />
+            >
+              {birthYear()}
+            </select>
           </div>
-          <label className="form-group mb-1">
-            <span>성별</span>
-            <br />
-            <input type="radio" name="gender" className="genchk" value="남" />남
-          </label>
-          <label className="form-group mb-1">
-            <input type="radio" name="gender" className="genchk" value="여" />여
-          </label>
+          <span style={{ fontWeight: "bold" }}>성별</span>
+          <br />
+          <div
+            className="form-check form-check-inline  form-group"
+            onChange={handleValueChange}
+          >
+            <label className="form-group mb-1">
+              <input
+                type="radio"
+                name="gender"
+                className="form-check-input"
+                value="남"
+              />
+              남
+            </label>
+            <label className="form-group mb-1 mx-5">
+              <input
+                type="radio"
+                name="gender"
+                className="form-check-input"
+                value="여"
+              />
+              여
+            </label>
+          </div>
           <hr className="my-3" />
           <div className="form-group mb-3 mb-1">
             <div
               className="form-check form-check-inline  form-group"
               onChange={handleValueChange}
             >
-              <label className="mx-5">
+              <label>
                 <input
                   type="radio"
                   name="authRole"

@@ -19,7 +19,7 @@ function BaseLayout() {
             {localStorage.getItem("username") !== null ? (
               <li className="nav-item">
                 <NavLink style={activeStyle} className="nav-link" to="/logout">
-                  {localStorage.getItem("username") + " LOGOUT"}
+                  {localStorage.getItem("nickname") + " LOGOUT"}
                 </NavLink>
               </li>
             ) : (
