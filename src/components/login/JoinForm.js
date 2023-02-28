@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { baseUrl } from "../../commonApi/todoApi";
 
 const JoinForm = () => {
@@ -353,6 +353,12 @@ const JoinForm = () => {
               </label>
             </div>
           </div>
+          <hr />
+          <span>아이디가 있으신가요..?</span>
+          <button>
+            <Link to="/login">로그인</Link>
+          </button>
+          <hr />
           <button type="submit" className="btn btn-primary">
             가입 완료
           </button>

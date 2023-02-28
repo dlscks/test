@@ -34,9 +34,12 @@ const LoginPage = () => {
 
         let jwtToken = response.headers["authorization"];
         let jwtUsername = response.data.username;
+        let jwtNickname = response.data.nickname;
+
         console.log("jwtToken", jwtToken);
         localStorage.setItem("Authorization", jwtToken);
         localStorage.setItem("username", jwtUsername);
+        localStorage.setItem("nickname", jwtNickname);
 
         setUsername("");
         setPassword("");
